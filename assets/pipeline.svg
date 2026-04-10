@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="112%">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="10" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="10" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="10" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#22c55e"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="10" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#a855f7"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="10" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#f97316"/>
+    </marker>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="420" rx="16" fill="url(#bgGrad)"/>
+
+  <!-- Title -->
+  <text x="600" y="38" text-anchor="middle" font-size="22" font-weight="700" fill="#f1f5f9">Murmur — Live Translation Pipeline</text>
+  <text x="600" y="58" text-anchor="middle" font-size="12" fill="#94a3b8">System Audio -> Speech Recognition -> Translation -> Notch Subtitles</text>
+
+  <!-- ==================== STAGE 1: SYSTEM AUDIO ==================== -->
+  <rect x="30" y="85" width="190" height="200" rx="12" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="125" y="108" text-anchor="middle" font-size="10" font-weight="700" fill="#60a5fa" letter-spacing="1">SYSTEM AUDIO</text>
+
+  <rect x="48" y="122" width="154" height="40" rx="8" fill="#3b82f6" filter="url(#shadow)"/>
+  <text x="125" y="142" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">ScreenCaptureKit</text>
+  <text x="125" y="155" text-anchor="middle" font-size="9" fill="#bfdbfe">SCStream audio tap</text>
+
+  <line x1="125" y1="162" x2="125" y2="178" stroke="#3b82f6" stroke-width="1.5"/>
+
+  <rect x="48" y="180" width="154" height="40" rx="8" fill="#1e40af" filter="url(#shadow)"/>
+  <text x="125" y="200" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">Audio Capture</text>
+  <text x="125" y="213" text-anchor="middle" font-size="9" fill="#93c5fd">48kHz mono PCM</text>
+
+  <rect x="48" y="232" width="154" height="24" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="125" y="248" text-anchor="middle" font-size="9" fill="#94a3b8">No mic needed</text>
+
+  <!-- Arrow: Audio -> Speech -->
+  <line x1="220" y1="185" x2="262" y2="185" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <!-- ==================== STAGE 2: SPEECH RECOGNITION ==================== -->
+  <rect x="272" y="85" width="230" height="280" rx="12" fill="#1a2e1a" stroke="#22c55e" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="387" y="108" text-anchor="middle" font-size="10" font-weight="700" fill="#4ade80" letter-spacing="1">SPEECH RECOGNITION</text>
+
+  <rect x="290" y="122" width="194" height="50" rx="8" fill="#166534" filter="url(#shadow)"/>
+  <text x="387" y="142" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Apple Speech</text>
+  <text x="387" y="157" text-anchor="middle" font-size="9" fill="#86efac">SFSpeechRecognizer</text>
+  <text x="387" y="168" text-anchor="middle" font-size="8" fill="#bbf7d0">Real-time, on-device</text>
+
+  <text x="387" y="192" text-anchor="middle" font-size="10" fill="#94a3b8">or</text>
+
+  <rect x="290" y="202" width="194" height="50" rx="8" fill="#14532d" filter="url(#shadow)"/>
+  <text x="387" y="222" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">WhisperKit</text>
+  <text x="387" y="237" text-anchor="middle" font-size="9" fill="#86efac">whisper.cpp via CoreML</text>
+  <text x="387" y="248" text-anchor="middle" font-size="8" fill="#bbf7d0">Higher accuracy, 3s chunks</text>
+
+  <line x1="387" y1="256" x2="387" y2="270" stroke="#22c55e" stroke-width="1.5"/>
+
+  <rect x="290" y="272" width="194" height="36" rx="8" fill="#052e16" filter="url(#shadow)"/>
+  <text x="387" y="290" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">Partial + Final Results</text>
+  <text x="387" y="303" text-anchor="middle" font-size="9" fill="#86efac">Auto-restart on 60s timeout</text>
+
+  <rect x="290" y="320" width="194" height="30" rx="6" fill="#0f172a" stroke="#22c55e" stroke-width="1"/>
+  <text x="387" y="340" text-anchor="middle" font-size="9" fill="#fbbf24">Watchdog: restarts on silence</text>
+
+  <!-- Arrow: Speech -> Translation -->
+  <line x1="502" y1="185" x2="542" y2="185" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+  <!-- ==================== STAGE 3: TRANSLATION ==================== -->
+  <rect x="552" y="85" width="230" height="200" rx="12" fill="#2a1f3d" stroke="#a855f7" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="667" y="108" text-anchor="middle" font-size="10" font-weight="700" fill="#c084fc" letter-spacing="1">TRANSLATION</text>
+
+  <rect x="570" y="122" width="194" height="46" rx="8" fill="#6d28d9" filter="url(#shadow)"/>
+  <text x="667" y="142" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Apple Translation</text>
+  <text x="667" y="157" text-anchor="middle" font-size="9" fill="#ddd6fe">TranslationSession API</text>
+  <text x="667" y="168" text-anchor="middle" font-size="8" fill="#c4b5fd">On-device, private</text>
+
+  <line x1="667" y1="170" x2="667" y2="186" stroke="#a855f7" stroke-width="1.5"/>
+
+  <rect x="570" y="188" width="194" height="36" rx="8" fill="#5b21b6" filter="url(#shadow)"/>
+  <text x="667" y="206" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">Real-time Debounce</text>
+  <text x="667" y="220" text-anchor="middle" font-size="9" fill="#ddd6fe">Translate on every 3+ chars</text>
+
+  <rect x="570" y="236" width="194" height="36" rx="6" fill="#0f172a" stroke="#a855f7" stroke-width="1"/>
+  <text x="667" y="254" text-anchor="middle" font-size="9" fill="#94a3b8">20+ language pairs</text>
+  <text x="667" y="267" text-anchor="middle" font-size="9" fill="#94a3b8">Auto-detect source language</text>
+
+  <!-- Arrow: Translation -> Overlay -->
+  <line x1="782" y1="185" x2="822" y2="185" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-purple)"/>
+
+  <!-- ==================== STAGE 4: NOTCH OVERLAY ==================== -->
+  <rect x="832" y="85" width="340" height="300" rx="12" fill="#2d1f0e" stroke="#f97316" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="1002" y="108" text-anchor="middle" font-size="10" font-weight="700" fill="#fb923c" letter-spacing="1">NOTCH OVERLAY</text>
+
+  <!-- Notch shape preview -->
+  <rect x="870" y="122" width="264" height="100" rx="16" fill="#000000" stroke="#333" stroke-width="1"/>
+  <text x="1002" y="155" text-anchor="middle" font-size="10" fill="#ffffff80">&#x7559;&#x5B66;&#x3057;&#x3066;&#x3001;&#x65E5;&#x672C;&#x306A;&#x3093;&#x304B;&#x5927;&#x597D;&#x304D;&#x306B;</text>
+  <text x="1002" y="178" text-anchor="middle" font-size="14" font-weight="600" fill="#fff">Studying abroad, I love Japan</text>
+  <rect x="878" y="200" width="50" height="14" rx="4" fill="#333"/>
+  <circle cx="937" cy="207" r="3" fill="#ef4444"/>
+  <text x="948" y="211" font-size="8" fill="#999">JA</text>
+  <text x="968" y="211" font-size="7" fill="#666">-></text>
+  <text x="984" y="211" font-size="8" fill="#999">EN</text>
+
+  <!-- Features -->
+  <rect x="870" y="236" width="126" height="46" rx="8" fill="#92400e" filter="url(#shadow)"/>
+  <text x="933" y="256" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">Both Mode</text>
+  <text x="933" y="270" text-anchor="middle" font-size="8" fill="#fde68a">Original + Translation</text>
+
+  <rect x="1008" y="236" width="126" height="46" rx="8" fill="#78350f" filter="url(#shadow)"/>
+  <text x="1071" y="256" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">Subtitle Mode</text>
+  <text x="1071" y="270" text-anchor="middle" font-size="8" fill="#fde68a">Translation only</text>
+
+  <rect x="870" y="296" width="264" height="36" rx="8" fill="#451a03" filter="url(#shadow)"/>
+  <text x="1002" y="313" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">NSPanel @ .screenSaver level</text>
+  <text x="1002" y="327" text-anchor="middle" font-size="9" fill="#fdba74">Covers notch area, all Spaces</text>
+
+  <rect x="870" y="344" width="264" height="26" rx="6" fill="#0f172a" stroke="#f97316" stroke-width="1"/>
+  <text x="1002" y="362" text-anchor="middle" font-size="9" fill="#94a3b8">Global hotkeys: Opt+Cmd+L / O / D / +/-</text>
+
+  <!-- Bottom status bar -->
+  <rect x="30" y="392" width="1140" height="22" rx="4" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="600" y="407" text-anchor="middle" font-size="10" fill="#64748b">macOS 15+ | SwiftUI + AppKit | ScreenCaptureKit | Speech Framework | Translation Framework | Carbon Hotkeys</text>
+</svg>
