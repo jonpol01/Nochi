@@ -10,10 +10,16 @@ final class AudioCaptureManager: NSObject, @unchecked Sendable {
     private var stream: SCStream?
     private let audioQueue = DispatchQueue(label: "com.murmur.audio", qos: .userInitiated)
     private var bufferCount = 0
+    private static var cachedContent: SCShareableContent?
 
     func startCapture() async throws {
-        NSLog("[AudioCapture] Requesting SCShareableContent...")
-        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+        let content: SCShareableContent
+        if let cached = Self.cachedContent {
+            content = cached
+        } else {
+            content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+            Self.cachedContent = content
+        }
         guard let display = content.displays.first else {
             throw AudioCaptureError.noDisplay
         }
@@ -51,11 +57,11 @@ final class AudioCaptureManager: NSObject, @unchecked Sendable {
     }
 
     static func requestPermission() async -> Bool {
+        if cachedContent != nil { return true }
         do {
-            _ = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+            cachedContent = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
             return true
         } catch {
-            NSLog("[AudioCapture] Permission check failed: %@", error.localizedDescription)
             return false
         }
     }

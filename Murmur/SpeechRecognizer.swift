@@ -45,19 +45,7 @@ final class AppleSpeechRecognizer: SpeechRecognizerProtocol, @unchecked Sendable
             throw SpeechRecognizerError.unavailable
         }
 
-        let authStatus = SFSpeechRecognizer.authorizationStatus()
-        DebugLog.log("Speech", "Starting, locale=\(recognizer.locale.identifier) auth=\(authStatus.rawValue)")
-
-        // Request authorization if not yet determined
-        if authStatus == .notDetermined {
-            DebugLog.log("Speech", "Requesting authorization...")
-            SFSpeechRecognizer.requestAuthorization { status in
-                DebugLog.log("Speech", "Authorization result: \(status.rawValue)")
-            }
-        } else if authStatus != .authorized {
-            DebugLog.log("Speech", "NOT AUTHORIZED (status=\(authStatus.rawValue))")
-            throw SpeechRecognizerError.notAuthorized
-        }
+        DebugLog.log("Speech", "Starting, locale=\(recognizer.locale.identifier)")
 
         isRunning = true
         feedCount = 0

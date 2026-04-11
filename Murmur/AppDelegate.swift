@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import Speech
 import SwiftUI
 
 @MainActor
@@ -27,6 +28,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         model.loadFromDefaults()
         overlayController = OverlayWindowController(model: model)
         overlayController?.setVisible(model.isOverlayVisible)
+
+        // Only prompt for Speech if never asked before; Screen Recording
+        // is requested lazily when the user starts listening (avoids a
+        // system prompt on every launch on macOS 15+).
+        if SFSpeechRecognizer.authorizationStatus() == .notDetermined {
+            SFSpeechRecognizer.requestAuthorization { _ in }
+        }
 
         setupEditMenu()
         wireModel()

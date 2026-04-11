@@ -107,8 +107,8 @@ final class TranslatorModel: ObservableObject {
 
         Task {
             do {
-                // 1. Set up audio capture
-                let capture = AudioCaptureManager()
+                // 1. Reuse audio capture (avoids TCC prompt on every start)
+                let capture = self.audioCaptureManager ?? AudioCaptureManager()
                 self.audioCaptureManager = capture
 
                 // 2. Set up speech recognizer
@@ -166,7 +166,7 @@ final class TranslatorModel: ObservableObject {
     func stopListening() {
         NSLog("[Model] Stopping pipeline")
         audioCaptureManager?.stopCapture()
-        audioCaptureManager = nil
+        // Don't nil — reuse on next start to avoid TCC prompt
         speechRecognizer?.stop()
         speechRecognizer = nil
         translationTask?.cancel()
