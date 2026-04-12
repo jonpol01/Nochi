@@ -1,6 +1,8 @@
 <div align="center">
 
-# Nochi
+<img src="assets/app-icon.png" width="128" alt="Nochi app icon" />
+
+# Nochi (ノッチ)
 
 ### Real-time live translation of system audio displayed as subtitles in the macOS notch area.
 
