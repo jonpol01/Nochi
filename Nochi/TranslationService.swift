@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(Translation)
+#if swift(>=6.2)
 import Translation
 #endif
 
@@ -18,11 +18,11 @@ final class TranslationService {
             return ""
         }
 
+        #if swift(>=6.2)
         guard #available(macOS 26.0, *) else {
             return text
         }
 
-        #if canImport(Translation)
         // Recreate session if language pair changed
         if session == nil ||
            currentSourceLanguage != source ||
