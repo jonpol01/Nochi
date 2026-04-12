@@ -264,6 +264,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Murmur/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSAudioCaptureUsageDescription = "Murmur captures system audio for live translation.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Murmur captures system audio for live translation.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Murmur uses speech recognition to transcribe audio for live translation.";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -297,6 +298,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Murmur/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSAudioCaptureUsageDescription = "Murmur captures system audio for live translation.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Murmur captures system audio for live translation.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Murmur uses speech recognition to transcribe audio for live translation.";
 				LD_RUNPATH_SEARCH_PATHS = (
