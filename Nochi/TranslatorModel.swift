@@ -366,6 +366,7 @@ final class TranslatorModel: ObservableObject {
             let targetLocale = Locale.Language(identifier: targetLanguageCode)
             return try await translationService!.translate(text, from: sourceLocale, to: targetLocale)
         } catch {
+            NSLog("[Model] Translation error: %@", error.localizedDescription)
             return text
         }
     }

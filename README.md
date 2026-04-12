@@ -8,7 +8,7 @@
 
 [![Swift](https://img.shields.io/badge/Swift-5.0-F05138?style=for-the-badge&logo=swift&logoColor=white)](https://swift.org)
 [![macOS](https://img.shields.io/badge/macOS-15.0+-000000?style=for-the-badge&logo=apple&logoColor=white)](https://developer.apple.com/macos/)
-[![ScreenCaptureKit](https://img.shields.io/badge/ScreenCaptureKit-System_Audio-333333?style=for-the-badge&logo=apple&logoColor=white)](https://developer.apple.com/documentation/screencapturekit)
+[![Core Audio](https://img.shields.io/badge/Core_Audio-Process_Tap-333333?style=for-the-badge&logo=apple&logoColor=white)](https://developer.apple.com/documentation/coreaudio)
 [![Translation](https://img.shields.io/badge/Apple_Translation-On--Device-7C3AED?style=for-the-badge&logo=apple&logoColor=white)](https://developer.apple.com/documentation/translation)
 
 [![Speech](https://img.shields.io/badge/Speech_Framework-Real--Time-4285F4?style=for-the-badge&logo=apple&logoColor=white)](https://developer.apple.com/documentation/speech)
@@ -23,9 +23,11 @@
 
 ## What It Does
 
-A macOS menu bar app that captures **system audio** (not the microphone) via ScreenCaptureKit, performs **real-time speech recognition**, translates to a target language using **Apple's on-device Translation framework**, and displays live subtitles in a **notch-shaped overlay** pinned to the top of the screen.
+A macOS menu bar app that captures **system audio** (not the microphone) via Core Audio Process Tap, performs **real-time speech recognition**, translates to a target language using **Apple's on-device Translation framework**, and displays live subtitles in a **notch-shaped overlay** pinned to the top of the screen.
 
 Watch a YouTube video in Japanese, join a meeting in Spanish, or listen to a podcast in Korean — Nochi shows you live translated subtitles without touching your mic or sending anything to the cloud.
+
+**No DRM black screens** — unlike ScreenCaptureKit, Process Tap uses `kTCCServiceAudioCapture` instead of screen recording, so DRM-protected apps (Netflix, Unext) won't black out their video.
 
 ---
 
@@ -40,21 +42,22 @@ Watch a YouTube video in Japanese, join a meeting in Spanish, or listen to a pod
 ## Features
 
 ### Audio Capture
-- **System audio only** — captures all sound output via ScreenCaptureKit, no microphone needed
-- **Excludes own audio** — `excludesCurrentProcessAudio` prevents feedback loops
-- **Zero-config** — taps the default display audio, works with any app
+- **System audio only** — captures all sound output via Core Audio Process Tap, no microphone needed
+- **No DRM interference** — shows a purple dot instead of the screen recording indicator, DRM apps keep playing normally
+- **Zero-config** — taps all system audio as stereo, works with any app
 
 ### Speech Recognition
 - **Apple Speech** — `SFSpeechRecognizer` with real-time partial results, on-device when available
 - **WhisperKit** (pluggable) — CoreML-accelerated Whisper for higher accuracy, 3-second chunked transcription
 - **Auto-restart** — seamlessly restarts on Apple Speech's ~60s timeout
 - **Watchdog** — detects silent failures and force-restarts recognition
+- **Pause detection** — commits sentences after 1.5s speech pause, even without punctuation
 
 ### Translation
 - **Apple Translation** — fully on-device, private, no API keys
 - **20+ language pairs** — Japanese, Korean, Chinese, Spanish, French, German, and more
 - **Real-time** — translates partial results as speech is recognized, not just final sentences
-- **Smart debounce** — translates immediately on 3+ new characters, throttles small changes
+- **Prioritized partials** — live partial translations take priority over committed sentences for responsive display
 
 ### Notch Overlay
 - **Notch-shaped UI** — custom `AppleNotchShape` with rounded lower corners, blends with the hardware notch
@@ -91,7 +94,7 @@ Watch a YouTube video in Japanese, join a meeting in Spanish, or listen to a pod
 | `NochiApp.swift` | `@main` entry point with `@NSApplicationDelegateAdaptor` |
 | `AppDelegate.swift` | Menu bar, overlay controller, hotkey manager, Combine wiring |
 | `TranslatorModel.swift` | Central `@MainActor ObservableObject` — pipeline state, settings, UserDefaults |
-| `AudioCaptureManager.swift` | ScreenCaptureKit `SCStream` — system audio capture, `CMSampleBuffer` to `AVAudioPCMBuffer` |
+| `AudioCaptureManager.swift` | Core Audio Process Tap — system audio capture via `AudioHardwareCreateProcessTap` |
 | `SpeechRecognizer.swift` | `SpeechRecognizerProtocol` + Apple Speech (with auto-restart) + WhisperKit stub |
 | `TranslationService.swift` | Apple `TranslationSession` wrapper for on-device translation |
 | `OverlayWindowController.swift` | `NSPanel` at `.screenSaver` level — notch overlay positioning and visibility |
@@ -135,7 +138,7 @@ Source and target languages can be mixed freely. Common pairs:
 - **macOS 15.0+** (Sequoia — required for Apple Translation framework)
 - **MacBook with notch** (works without notch too, overlay pins to top of screen)
 - **Xcode 16+**
-- **Screen Recording** permission (for ScreenCaptureKit system audio capture)
+- **Audio Recording** permission (for Core Audio Process Tap system audio capture)
 - **Speech Recognition** permission (for `SFSpeechRecognizer`)
 - Translation language packs (downloaded via System Settings > General > Language & Region > Translation Languages)
 
@@ -162,7 +165,7 @@ No CocoaPods, no SPM dependencies for the base build. Pure Apple frameworks.
 ### 3. Grant permissions
 
 On first launch:
-1. **Screen Recording** — macOS will prompt, or go to System Settings > Privacy & Security > Screen Recording
+1. **Audio Recording** — macOS will prompt for audio capture permission
 2. **Speech Recognition** — grant when prompted, or via System Settings > Privacy & Security > Speech Recognition
 
 ### 4. Download translation languages
@@ -202,6 +205,6 @@ MIT
 
 <div align="center">
 
-**Built with Swift, ScreenCaptureKit, Apple Speech, and Apple Translation**
+**Built with Swift, Core Audio Process Tap, Apple Speech, and Apple Translation**
 
 </div>

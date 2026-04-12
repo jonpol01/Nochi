@@ -11,6 +11,7 @@ final class AudioCaptureManager: @unchecked Sendable {
     private var aggregateDeviceID: AudioObjectID = .init(kAudioObjectUnknown)
     private var ioProcID: AudioDeviceIOProcID?
     private var tapFormat: AVAudioFormat?
+    private var converter: AVAudioConverter?
     private var bufferCount = 0
 
     func startCapture() async throws {
@@ -64,31 +65,49 @@ final class AudioCaptureManager: @unchecked Sendable {
         }
         NSLog("[AudioCapture] Aggregate device created (id=%d)", aggregateDeviceID)
 
-        // 5. Register IO proc to receive audio buffers
+        // 5. Convert to mono for speech recognition
+        let monoFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: format.sampleRate, channels: 1, interleaved: false)!
+        guard let conv = AVAudioConverter(from: format, to: monoFormat) else {
+            throw AudioCaptureError.formatUnavailable
+        }
+        self.converter = conv
+        NSLog("[AudioCapture] Converter: %dch -> 1ch mono", format.channelCount)
+
+        // 6. Register IO proc to receive audio buffers
         let capturedFormat = format
         let handler = onAudioBuffer
+        let audioConverter = conv
+        let outputFormat = monoFormat
         var logCount = 0
         status = AudioDeviceCreateIOProcIDWithBlock(&ioProcID, aggregateDeviceID, nil) {
             _, inInputData, _, _, _ in
             var abl = inInputData.pointee
-            guard let buffer = AVAudioPCMBuffer(
+            guard let inputBuffer = AVAudioPCMBuffer(
                 pcmFormat: capturedFormat,
                 bufferListNoCopy: &abl,
                 deallocator: nil
             ) else { return }
-            guard buffer.frameLength > 0 else { return }
+            guard inputBuffer.frameLength > 0 else { return }
+
+            guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: inputBuffer.frameLength) else { return }
+            var error: NSError?
+            audioConverter.convert(to: outputBuffer, error: &error) { _, outStatus in
+                outStatus.pointee = .haveData
+                return inputBuffer
+            }
+            guard error == nil, outputBuffer.frameLength > 0 else { return }
 
             logCount += 1
             if logCount == 1 || logCount % 500 == 0 {
-                NSLog("[AudioCapture] Buffer #%d: frames=%d", logCount, buffer.frameLength)
+                NSLog("[AudioCapture] Buffer #%d: frames=%d mono", logCount, outputBuffer.frameLength)
             }
-            handler?(buffer)
+            handler?(outputBuffer)
         }
         guard status == noErr else {
             throw AudioCaptureError.ioProcFailed(status)
         }
 
-        // 6. Start — triggers TCC prompt on first run
+        // 7. Start — triggers TCC prompt on first run
         status = AudioDeviceStart(aggregateDeviceID, ioProcID)
         guard status == noErr else {
             throw AudioCaptureError.startFailed(status)
@@ -112,6 +131,7 @@ final class AudioCaptureManager: @unchecked Sendable {
         }
         tapDescription = nil
         tapFormat = nil
+        converter = nil
         bufferCount = 0
         NSLog("[AudioCapture] Capture stopped")
     }

@@ -1,7 +1,5 @@
 import Foundation
-#if swift(>=6.2)
 import Translation
-#endif
 
 @MainActor
 final class TranslationService {
@@ -18,7 +16,6 @@ final class TranslationService {
             return ""
         }
 
-        #if swift(>=6.2)
         guard #available(macOS 26.0, *) else {
             return text
         }
@@ -41,9 +38,6 @@ final class TranslationService {
 
         let response = try await session.translate(text)
         return response.targetText
-        #else
-        return text
-        #endif
     }
 
     func teardown() {
