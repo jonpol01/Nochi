@@ -1,13 +1,14 @@
 import Foundation
+#if canImport(Translation)
 import Translation
+#endif
 
 @MainActor
 final class TranslationService {
-    private var session: TranslationSession?
+    private var session: Any?
     private var currentSourceLanguage: Locale.Language?
     private var currentTargetLanguage: Locale.Language?
 
-    @available(macOS 26.0, *)
     func translate(
         _ text: String,
         from source: Locale.Language?,
@@ -17,6 +18,11 @@ final class TranslationService {
             return ""
         }
 
+        guard #available(macOS 26.0, *) else {
+            return text
+        }
+
+        #if canImport(Translation)
         // Recreate session if language pair changed
         if session == nil ||
            currentSourceLanguage != source ||
@@ -29,12 +35,15 @@ final class TranslationService {
             currentTargetLanguage = target
         }
 
-        guard let session else {
+        guard let session = session as? TranslationSession else {
             throw TranslationError.sessionNotAvailable
         }
 
         let response = try await session.translate(text)
         return response.targetText
+        #else
+        return text
+        #endif
     }
 
     func teardown() {
