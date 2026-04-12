@@ -1,0 +1,71 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine next version
+        id: version
+        run: |
+          LATEST_TAG=$(git tag -l 'v0.*' --sort=-v:refname | head -1)
+          if [ -z "$LATEST_TAG" ]; then
+            NEXT="0.1.0"
+          else
+            # Strip 'v' prefix and bump patch
+            VER="${LATEST_TAG#v}"
+            MAJOR=$(echo "$VER" | cut -d. -f1)
+            MINOR=$(echo "$VER" | cut -d. -f2)
+            PATCH=$(echo "$VER" | cut -d. -f3)
+            NEXT="${MAJOR}.${MINOR}.$((PATCH + 1))"
+          fi
+          echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "tag=v$NEXT" >> "$GITHUB_OUTPUT"
+          echo "Next version: $NEXT"
+
+      - name: Set version in project
+        run: |
+          sed -i '' "s/MARKETING_VERSION = .*;/MARKETING_VERSION = ${{ steps.version.outputs.version }};/g" \
+            Nochi.xcodeproj/project.pbxproj
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
+
+      - name: Build
+        run: |
+          xcodebuild archive \
+            -project Nochi.xcodeproj \
+            -scheme Nochi \
+            -configuration Release \
+            -archivePath build/Nochi.xcarchive \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=YES \
+            CODE_SIGNING_ALLOWED=YES \
+            -quiet
+
+      - name: Package
+        run: |
+          APP="build/Nochi.xcarchive/Products/Applications/Nochi.app"
+          ditto -c -k --keepParent "$APP" "Nochi-${{ steps.version.outputs.tag }}.zip"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git tag "${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
+          gh release create "${{ steps.version.outputs.tag }}" \
+            "Nochi-${{ steps.version.outputs.tag }}.zip" \
+            --title "Nochi ${{ steps.version.outputs.tag }}" \
+            --notes "Unsigned build — right-click → Open to bypass Gatekeeper on first launch." \
+            --latest
