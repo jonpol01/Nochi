@@ -1,164 +1,144 @@
 import AVFoundation
-import CoreMedia
+import CoreAudio
 import Foundation
-import ScreenCaptureKit
 
-final class AudioCaptureManager: NSObject, @unchecked Sendable {
+final class AudioCaptureManager: @unchecked Sendable {
     var onAudioBuffer: ((AVAudioPCMBuffer) -> Void)?
     var onError: ((Error) -> Void)?
 
-    private var stream: SCStream?
-    private let audioQueue = DispatchQueue(label: "com.murmur.audio", qos: .userInitiated)
+    private var tapDescription: CATapDescription?
+    private var tapObjectID: AudioObjectID = .init(kAudioObjectUnknown)
+    private var aggregateDeviceID: AudioObjectID = .init(kAudioObjectUnknown)
+    private var ioProcID: AudioDeviceIOProcID?
+    private var tapFormat: AVAudioFormat?
     private var bufferCount = 0
-    private static var cachedContent: SCShareableContent?
 
     func startCapture() async throws {
-        let content: SCShareableContent
-        if let cached = Self.cachedContent {
-            content = cached
-        } else {
-            content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
-            Self.cachedContent = content
-        }
-        guard let display = content.displays.first else {
-            throw AudioCaptureError.noDisplay
-        }
-        NSLog("[AudioCapture] Found display: %dx%d", display.width, display.height)
+        // 1. Create tap — capture all system audio as stereo, unmuted
+        let desc = CATapDescription(stereoGlobalTapButExcludeProcesses: [])
+        desc.name = "MurmurSystemTap"
+        desc.muteBehavior = .unmuted
+        desc.isPrivate = true
+        tapDescription = desc
 
-        let config = SCStreamConfiguration()
-        config.capturesAudio = true
-        config.excludesCurrentProcessAudio = true
-        config.channelCount = 1
-        config.sampleRate = 48000
-        // Minimize video capture since we only need audio
-        config.width = 2
-        config.height = 2
-        config.minimumFrameInterval = CMTime(value: 1, timescale: 1)
+        // 2. Create the process tap
+        var status = AudioHardwareCreateProcessTap(desc, &tapObjectID)
+        guard status == noErr else {
+            throw AudioCaptureError.tapCreationFailed(status)
+        }
+        NSLog("[AudioCapture] Process tap created (id=%d)", tapObjectID)
 
-        let filter = SCContentFilter(display: display, excludingApplications: [], exceptingWindows: [])
-        let stream = SCStream(filter: filter, configuration: config, delegate: self)
-        try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: audioQueue)
-        // Must also add screen output or ScreenCaptureKit errors on every video frame
-        try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: audioQueue)
-        NSLog("[AudioCapture] Starting capture...")
-        try await stream.startCapture()
-        self.stream = stream
-        NSLog("[AudioCapture] Capture started successfully")
+        // 3. Read the tap's native audio format
+        var asbd = AudioStreamBasicDescription()
+        var size = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
+        var addr = AudioObjectPropertyAddress(
+            mSelector: kAudioTapPropertyFormat,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        status = AudioObjectGetPropertyData(tapObjectID, &addr, 0, nil, &size, &asbd)
+        guard status == noErr, let format = AVAudioFormat(streamDescription: &asbd) else {
+            throw AudioCaptureError.formatUnavailable
+        }
+        tapFormat = format
+        NSLog("[AudioCapture] Tap format: sr=%.0f ch=%d interleaved=%d",
+              format.sampleRate, format.channelCount, format.isInterleaved ? 1 : 0)
+
+        // 4. Build aggregate device containing the tap
+        let tapUID = desc.uuid.uuidString
+        let aggDesc: NSDictionary = [
+            kAudioAggregateDeviceUIDKey: "com.murmur.systemtap-\(UUID().uuidString)",
+            kAudioAggregateDeviceNameKey: "Murmur System Tap",
+            kAudioAggregateDeviceIsPrivateKey: true,
+            kAudioAggregateDeviceTapListKey: [
+                [
+                    kAudioSubTapUIDKey: tapUID,
+                    kAudioSubTapDriftCompensationKey: true,
+                ]
+            ],
+            kAudioAggregateDeviceTapAutoStartKey: false,
+        ]
+        status = AudioHardwareCreateAggregateDevice(aggDesc, &aggregateDeviceID)
+        guard status == noErr else {
+            throw AudioCaptureError.aggregateDeviceFailed(status)
+        }
+        NSLog("[AudioCapture] Aggregate device created (id=%d)", aggregateDeviceID)
+
+        // 5. Register IO proc to receive audio buffers
+        let capturedFormat = format
+        let handler = onAudioBuffer
+        var logCount = 0
+        status = AudioDeviceCreateIOProcIDWithBlock(&ioProcID, aggregateDeviceID, nil) {
+            _, inInputData, _, _, _ in
+            var abl = inInputData.pointee
+            guard let buffer = AVAudioPCMBuffer(
+                pcmFormat: capturedFormat,
+                bufferListNoCopy: &abl,
+                deallocator: nil
+            ) else { return }
+            guard buffer.frameLength > 0 else { return }
+
+            logCount += 1
+            if logCount == 1 || logCount % 500 == 0 {
+                NSLog("[AudioCapture] Buffer #%d: frames=%d", logCount, buffer.frameLength)
+            }
+            handler?(buffer)
+        }
+        guard status == noErr else {
+            throw AudioCaptureError.ioProcFailed(status)
+        }
+
+        // 6. Start — triggers TCC prompt on first run
+        status = AudioDeviceStart(aggregateDeviceID, ioProcID)
+        guard status == noErr else {
+            throw AudioCaptureError.startFailed(status)
+        }
+        NSLog("[AudioCapture] Capture started (Process Tap)")
     }
 
     func stopCapture() {
-        guard let stream else { return }
-        Task {
-            try? await stream.stopCapture()
+        if let procID = ioProcID {
+            AudioDeviceStop(aggregateDeviceID, procID)
+            AudioDeviceDestroyIOProcID(aggregateDeviceID, procID)
+            ioProcID = nil
         }
-        self.stream = nil
+        if aggregateDeviceID != .init(kAudioObjectUnknown) {
+            AudioHardwareDestroyAggregateDevice(aggregateDeviceID)
+            aggregateDeviceID = .init(kAudioObjectUnknown)
+        }
+        if tapObjectID != .init(kAudioObjectUnknown) {
+            AudioHardwareDestroyProcessTap(tapObjectID)
+            tapObjectID = .init(kAudioObjectUnknown)
+        }
+        tapDescription = nil
+        tapFormat = nil
         bufferCount = 0
         NSLog("[AudioCapture] Capture stopped")
-    }
-
-    static func requestPermission() async -> Bool {
-        if cachedContent != nil { return true }
-        do {
-            cachedContent = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
-            return true
-        } catch {
-            return false
-        }
-    }
-
-    private func sampleBufferToPCMBuffer(_ sampleBuffer: CMSampleBuffer) -> AVAudioPCMBuffer? {
-        guard let formatDescription = sampleBuffer.formatDescription,
-              let asbdPtr = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription) else {
-            return nil
-        }
-
-        var asbd = asbdPtr.pointee
-        guard let format = AVAudioFormat(streamDescription: &asbd) else {
-            if bufferCount == 0 { NSLog("[AudioCapture] Failed to create AVAudioFormat") }
-            return nil
-        }
-
-        let frameCount = CMSampleBufferGetNumSamples(sampleBuffer)
-        guard frameCount > 0 else { return nil }
-
-        if bufferCount == 0 {
-            NSLog("[AudioCapture] Audio format: sr=%.0f ch=%d interleaved=%d bitsPerChannel=%d",
-                  format.sampleRate, format.channelCount, format.isInterleaved ? 1 : 0,
-                  asbd.mBitsPerChannel)
-        }
-
-        // Get raw audio data pointer directly from the CMSampleBuffer
-        guard let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else { return nil }
-
-        var lengthAtOffset: Int = 0
-        var totalLength: Int = 0
-        var dataPointer: UnsafeMutablePointer<CChar>?
-        let status = CMBlockBufferGetDataPointer(blockBuffer, atOffset: 0, lengthAtOffsetOut: &lengthAtOffset, totalLengthOut: &totalLength, dataPointerOut: &dataPointer)
-        guard status == kCMBlockBufferNoErr, let dataPointer else { return nil }
-
-        guard let pcmBuffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frameCount)) else {
-            if bufferCount == 0 { NSLog("[AudioCapture] Failed to create AVAudioPCMBuffer") }
-            return nil
-        }
-        pcmBuffer.frameLength = AVAudioFrameCount(frameCount)
-
-        // Copy audio data into the PCM buffer
-        if format.isInterleaved {
-            // Interleaved: single buffer with all channels mixed
-            if let dest = pcmBuffer.audioBufferList.pointee.mBuffers.mData {
-                let bytesToCopy = min(totalLength, Int(pcmBuffer.audioBufferList.pointee.mBuffers.mDataByteSize))
-                memcpy(dest, dataPointer, bytesToCopy)
-            }
-        } else {
-            // Non-interleaved: separate buffer per channel
-            let channelCount = Int(format.channelCount)
-            let bytesPerFrame = Int(asbd.mBytesPerFrame)
-            let bytesPerChannel = frameCount * bytesPerFrame
-            let ablPointer = UnsafeMutableAudioBufferListPointer(pcmBuffer.mutableAudioBufferList)
-            for ch in 0..<min(channelCount, ablPointer.count) {
-                if let dest = ablPointer[ch].mData {
-                    let srcOffset = ch * bytesPerChannel
-                    let bytesToCopy = min(bytesPerChannel, Int(ablPointer[ch].mDataByteSize))
-                    if srcOffset + bytesToCopy <= totalLength {
-                        memcpy(dest, dataPointer.advanced(by: srcOffset), bytesToCopy)
-                    }
-                }
-            }
-        }
-
-        bufferCount += 1
-        if bufferCount == 1 || bufferCount % 500 == 0 {
-            NSLog("[AudioCapture] Buffer #%d: frames=%d totalBytes=%d", bufferCount, frameCount, totalLength)
-        }
-
-        return pcmBuffer
-    }
-}
-
-extension AudioCaptureManager: SCStreamDelegate {
-    nonisolated func stream(_ stream: SCStream, didStopWithError error: Error) {
-        NSLog("[AudioCapture] Stream stopped with error: %@", error.localizedDescription)
-        onError?(error)
-    }
-}
-
-extension AudioCaptureManager: SCStreamOutput {
-    nonisolated func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
-        guard type == .audio else { return }
-        guard let pcmBuffer = sampleBufferToPCMBuffer(sampleBuffer) else { return }
-        guard pcmBuffer.frameLength > 0 else { return }
-        onAudioBuffer?(pcmBuffer)
     }
 }
 
 enum AudioCaptureError: LocalizedError {
-    case noDisplay
+    case tapCreationFailed(OSStatus)
+    case formatUnavailable
+    case aggregateDeviceFailed(OSStatus)
+    case ioProcFailed(OSStatus)
+    case startFailed(OSStatus)
     case permissionDenied
 
     var errorDescription: String? {
         switch self {
-        case .noDisplay: return "No display found for audio capture."
-        case .permissionDenied: return "Screen Recording permission is required. Please enable it in System Settings > Privacy & Security."
+        case .tapCreationFailed(let s):
+            return "Failed to create audio tap (OSStatus \(s)). Grant Audio Recording permission in System Settings > Privacy & Security."
+        case .formatUnavailable:
+            return "Could not read audio format from the tap."
+        case .aggregateDeviceFailed(let s):
+            return "Failed to create aggregate audio device (OSStatus \(s))."
+        case .ioProcFailed(let s):
+            return "Failed to register audio IO proc (OSStatus \(s))."
+        case .startFailed(let s):
+            return "Failed to start audio capture (OSStatus \(s))."
+        case .permissionDenied:
+            return "Audio Recording permission is required. Please enable it in System Settings > Privacy & Security."
         }
     }
 }
