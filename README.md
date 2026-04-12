@@ -1,5 +1,7 @@
 <div align="center">
 
+**[English](README.md)** | **[日本語](README.ja.md)**
+
 <img src="assets/app-icon.png" width="128" alt="Nochi app icon" />
 
 # Nochi (ノッチ)
