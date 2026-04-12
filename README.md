@@ -1,6 +1,6 @@
 <div align="center">
 
-# Murmur
+# Nochi
 
 ### Real-time live translation of system audio displayed as subtitles in the macOS notch area.
 
@@ -25,14 +25,14 @@
 
 A macOS menu bar app that captures **system audio** (not the microphone) via ScreenCaptureKit, performs **real-time speech recognition**, translates to a target language using **Apple's on-device Translation framework**, and displays live subtitles in a **notch-shaped overlay** pinned to the top of the screen.
 
-Watch a YouTube video in Japanese, join a meeting in Spanish, or listen to a podcast in Korean — Murmur shows you live translated subtitles without touching your mic or sending anything to the cloud.
+Watch a YouTube video in Japanese, join a meeting in Spanish, or listen to a podcast in Korean — Nochi shows you live translated subtitles without touching your mic or sending anything to the cloud.
 
 ---
 
 ## Pipeline
 
 <div align="center">
-<img src="assets/pipeline.svg" width="100%" alt="Murmur Translation Pipeline" />
+<img src="assets/pipeline.svg" width="100%" alt="Nochi Translation Pipeline" />
 </div>
 
 ---
@@ -79,7 +79,7 @@ Watch a YouTube video in Japanese, join a meeting in Spanish, or listen to a pod
 ## Architecture
 
 <div align="center">
-<img src="assets/architecture.svg" width="100%" alt="Murmur System Architecture" />
+<img src="assets/architecture.svg" width="100%" alt="Nochi System Architecture" />
 </div>
 
 ---
@@ -88,7 +88,7 @@ Watch a YouTube video in Japanese, join a meeting in Spanish, or listen to a pod
 
 | File | Purpose |
 |------|---------|
-| `MurmurApp.swift` | `@main` entry point with `@NSApplicationDelegateAdaptor` |
+| `NochiApp.swift` | `@main` entry point with `@NSApplicationDelegateAdaptor` |
 | `AppDelegate.swift` | Menu bar, overlay controller, hotkey manager, Combine wiring |
 | `TranslatorModel.swift` | Central `@MainActor ObservableObject` — pipeline state, settings, UserDefaults |
 | `AudioCaptureManager.swift` | ScreenCaptureKit `SCStream` — system audio capture, `CMSampleBuffer` to `AVAudioPCMBuffer` |
@@ -146,14 +146,14 @@ Source and target languages can be mixed freely. Common pairs:
 ### 1. Clone
 
 ```bash
-git clone https://github.com/jonpol01/Murmur.git
-cd Murmur
+git clone https://github.com/jonpol01/Nochi.git
+cd Nochi
 ```
 
 ### 2. Build and run
 
 ```bash
-open Murmur.xcodeproj
+open Nochi.xcodeproj
 # Product -> Run (or Cmd+R)
 ```
 
@@ -190,7 +190,7 @@ For higher accuracy speech recognition via local Whisper models:
 
 | Repo | Description |
 |------|-------------|
-| [notchprompt](https://github.com/jonpol01/notchprompt) | Teleprompter in the notch — the UI architecture Murmur is built on |
+| [notchprompt](https://github.com/jonpol01/notchprompt) | Teleprompter in the notch — the UI architecture Nochi is built on |
 
 ---
 

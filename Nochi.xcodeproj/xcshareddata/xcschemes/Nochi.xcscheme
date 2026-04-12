@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A1000006AAAA000000000006"
-               BuildableName = "Murmur.app"
-               BlueprintName = "Murmur"
-               ReferencedContainer = "container:Murmur.xcodeproj">
+               BuildableName = "Nochi.app"
+               BlueprintName = "Nochi"
+               ReferencedContainer = "container:Nochi.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A1000006AAAA000000000006"
-            BuildableName = "Murmur.app"
-            BlueprintName = "Murmur"
-            ReferencedContainer = "container:Murmur.xcodeproj">
+            BuildableName = "Nochi.app"
+            BlueprintName = "Nochi"
+            ReferencedContainer = "container:Nochi.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -62,9 +62,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A1000006AAAA000000000006"
-            BuildableName = "Murmur.app"
-            BlueprintName = "Murmur"
-            ReferencedContainer = "container:Murmur.xcodeproj">
+            BuildableName = "Nochi.app"
+            BlueprintName = "Nochi"
+            ReferencedContainer = "container:Nochi.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

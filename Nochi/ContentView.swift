@@ -4,7 +4,7 @@ import Speech
 struct ContentView: View {
     @ObservedObject private var model = TranslatorModel.shared
     @State private var speechAuthStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
-    @State private var screenRecordingGranted: Bool? = nil
+    // Audio Recording permission is auto-prompted by Core Audio on first capture
 
     private let supportedLanguages: [(code: String, name: String)] = [
         ("auto", "Auto-detect"),
@@ -33,7 +33,7 @@ struct ContentView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Murmur Settings")
+                Text("Nochi Settings")
                     .font(.title2.bold())
                     .padding(.bottom, 4)
 
@@ -171,16 +171,10 @@ struct ContentView: View {
     private var permissionsSection: some View {
         SettingsSection(title: "Permissions") {
             HStack {
-                Image(systemName: screenRecordingGranted == true ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(screenRecordingGranted == true ? .green : .secondary)
-                Text("Screen Recording")
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                Text("Audio Recording")
                 Spacer()
-                if screenRecordingGranted != true {
-                    Button("Open Settings") {
-                        openSystemSettings("Privacy_ScreenCapture")
-                    }
-                    .buttonStyle(.link)
-                }
             }
 
             HStack {
@@ -245,7 +239,7 @@ struct ContentView: View {
     private func checkPermissions() {
         speechAuthStatus = SFSpeechRecognizer.authorizationStatus()
         Task {
-            screenRecordingGranted = await AudioCaptureManager.requestPermission()
+            // Audio Recording permission handled automatically by Core Audio
         }
     }
 

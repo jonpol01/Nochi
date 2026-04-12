@@ -103,6 +103,8 @@ final class TranslatorModel: ObservableObject {
         pendingPartialText = nil
         pendingCommits.removeAll()
         translating = false
+        committedSentenceCount = 0
+        pauseCommitTask?.cancel()
 
         DebugLog.log("Model", "Starting pipeline: source=\(sourceLanguageCode) target=\(targetLanguageCode) engine=\(speechEngine.rawValue)")
 
@@ -194,44 +196,98 @@ final class TranslatorModel: ObservableObject {
     private var translating = false
     /// Latest partial text queued while a translation was in-flight.
     private var pendingPartialText: String?
+    /// Timer that commits current text when the speaker pauses (~1.5s).
+    private var pauseCommitTask: Task<Void, Never>?
     /// Completed sentences queued for translation.
     private var pendingCommits: [String] = []
+    /// Number of complete sentences already committed from the current
+    /// recognition session. Tracked by count (not content) so recognizer
+    /// text revisions don't cause duplicates.
+    private var committedSentenceCount = 0
 
     private static let sentenceEndChars = Set<Character>(["。", "！", "？", ".", "!", "?"])
 
     private func handleTranscript(_ text: String, isFinal: Bool) {
+        pauseCommitTask?.cancel()
+
         if isFinal {
             pendingPartialText = nil
             originalText = ""
             translatedText = ""
 
-            // Split final text at sentence boundaries so each becomes its own line
-            for sentence in splitSentences(text) {
-                pendingCommits.append(sentence)
+            // Only commit sentences not already shown (fuzzy prefix match
+            // catches revisions where the recognizer tweaked the ending)
+            let parts = splitSentences(text)
+            for part in parts {
+                if !isDuplicate(part) {
+                    pendingCommits.append(part)
+                }
             }
+            committedSentenceCount = 0
             drainQueue()
             return
         }
 
-        // Partial: only DISPLAY the tail after the last sentence-ender.
-        // Never commit during partials — the recognizer revises text freely.
-        // Cap to ~80 chars so the display stays within 2 lines.
-        var tail = tailAfterLastSentence(text)
+        // Split into sentences — commit completed ones, show only the tail
+        let parts = splitSentences(text)
+        let lastChar = text.last
+        let hasTrailing = lastChar != nil && !Self.sentenceEndChars.contains(lastChar!)
+        let completedCount = hasTrailing ? parts.count - 1 : parts.count
+
+        if completedCount > committedSentenceCount {
+            for i in committedSentenceCount..<completedCount {
+                if !isDuplicate(parts[i]) {
+                    pendingCommits.append(parts[i])
+                }
+            }
+            committedSentenceCount = completedCount
+        } else if completedCount < committedSentenceCount {
+            // Recognizer revised away a sentence-ender — undo pending commits
+            let excess = committedSentenceCount - completedCount
+            pendingCommits = Array(pendingCommits.dropLast(min(excess, pendingCommits.count)))
+            committedSentenceCount = completedCount
+        }
+
+        // Display only the trailing fragment (capped to ~80 chars)
+        var tail = hasTrailing ? (parts.last ?? "") : ""
         if tail.count > 80 {
             tail = String(tail.suffix(80))
         }
         originalText = tail
-        pendingPartialText = tail
+        if !tail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            pendingPartialText = tail
+        } else {
+            pendingPartialText = nil
+            translatedText = ""
+        }
         drainQueue()
+
+        // Pause detection: if no new partial arrives within 1.5s, the
+        // speaker has paused — commit current text even without punctuation.
+        let currentTail = tail.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !currentTail.isEmpty {
+            pauseCommitTask = Task {
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                guard !Task.isCancelled else { return }
+                let toCommit = self.originalText.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !toCommit.isEmpty, !self.isDuplicate(toCommit) else { return }
+                self.pendingCommits.append(toCommit)
+                self.committedSentenceCount += 1
+                self.originalText = ""
+                self.translatedText = ""
+                self.pendingPartialText = nil
+                self.drainQueue()
+            }
+        }
     }
 
-    /// Returns the fragment after the last sentence-ending punctuation,
-    /// or the full text if no sentence boundary exists.
-    private func tailAfterLastSentence(_ text: String) -> String {
-        guard let endIdx = lastSentenceEndIndex(in: text) else { return text }
-        let after = String(text[text.index(after: endIdx)...])
-            .trimmingCharacters(in: .whitespaces)
-        return after.isEmpty ? text : after
+    /// Fuzzy duplicate check — catches revisions where the recognizer
+    /// tweaked the ending of an already-committed sentence.
+    private func isDuplicate(_ text: String) -> Bool {
+        let prefix = String(text.prefix(min(15, text.count)))
+        guard !prefix.isEmpty else { return false }
+        return subtitleLines.contains { $0.original.hasPrefix(prefix) }
+            || pendingCommits.contains { $0.hasPrefix(prefix) }
     }
 
     /// Split text into individual sentences at sentence-ending punctuation.
@@ -251,26 +307,12 @@ final class TranslatorModel: ObservableObject {
         return sentences
     }
 
-    /// Process one item at a time: commits first, then the latest partial.
-    /// Ensures only ONE XPC translate call is in-flight at any moment.
+    /// Process one item at a time: live partials first (keeps display
+    /// responsive), then queued commits. Only ONE XPC call at a time.
     private func drainQueue() {
         guard !translating else { return }
 
-        if let commit = pendingCommits.first {
-            pendingCommits.removeFirst()
-            translating = true
-            Task {
-                let translated = await getTranslation(commit)
-                subtitleLines.append(SubtitleLine(original: commit, translated: translated))
-                if subtitleLines.count > maxVisibleLines {
-                    subtitleLines.removeFirst(subtitleLines.count - maxVisibleLines)
-                }
-                translating = false
-                drainQueue()
-            }
-            return
-        }
-
+        // Live partials first — user sees these updating in real-time
         if let partial = pendingPartialText {
             pendingPartialText = nil
             translating = true
@@ -283,6 +325,22 @@ final class TranslatorModel: ObservableObject {
                     self.translatedText = translated
                 }
                 self.drainQueue()
+            }
+            return
+        }
+
+        // Then queued commits — completed sentences for subtitle lines
+        if let commit = pendingCommits.first {
+            pendingCommits.removeFirst()
+            translating = true
+            Task {
+                let translated = await getTranslation(commit)
+                subtitleLines.append(SubtitleLine(original: commit, translated: translated))
+                if subtitleLines.count > maxVisibleLines {
+                    subtitleLines.removeFirst(subtitleLines.count - maxVisibleLines)
+                }
+                translating = false
+                drainQueue()
             }
         }
     }

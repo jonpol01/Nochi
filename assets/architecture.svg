@@ -14,14 +14,14 @@
 
   <rect width="1200" height="520" rx="16" fill="url(#bgGrad)"/>
 
-  <text x="600" y="38" text-anchor="middle" font-size="22" font-weight="700" fill="#f1f5f9">Murmur — System Architecture</text>
+  <text x="600" y="38" text-anchor="middle" font-size="22" font-weight="700" fill="#f1f5f9">Nochi — System Architecture</text>
   <text x="600" y="58" text-anchor="middle" font-size="12" fill="#94a3b8">SwiftUI + AppKit Hybrid | Menu Bar App | Notch Overlay</text>
 
   <!-- ==================== App Entry ==================== -->
   <rect x="30" y="80" width="160" height="120" rx="10" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5" filter="url(#shadow)"/>
   <text x="110" y="102" text-anchor="middle" font-size="10" font-weight="700" fill="#60a5fa" letter-spacing="1">APP ENTRY</text>
   <rect x="44" y="114" width="132" height="30" rx="6" fill="#3b82f6" filter="url(#shadow)"/>
-  <text x="110" y="134" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">MurmurApp</text>
+  <text x="110" y="134" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">NochiApp</text>
   <rect x="44" y="152" width="132" height="30" rx="6" fill="#1e40af" filter="url(#shadow)"/>
   <text x="110" y="172" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">AppDelegate</text>
 

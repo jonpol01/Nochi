@@ -13,12 +13,12 @@ final class SettingsWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = "Murmur Settings"
+        window.title = "Nochi Settings"
         window.contentViewController = hosting
         window.isReleasedWhenClosed = false
         window.minSize = NSSize(width: 500, height: 400)
         window.level = NSWindow.Level(Int(NSWindow.Level.screenSaver.rawValue) + 1)
-        window.setFrameAutosaveName("MurmurSettingsWindow")
+        window.setFrameAutosaveName("NochiSettingsWindow")
         window.center()
 
         super.init(window: window)

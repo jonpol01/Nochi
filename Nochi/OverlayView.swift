@@ -221,7 +221,7 @@ struct OverlayView: View {
                     OverlayControlButton(symbol: "xmark") {
                         NSApp.terminate(nil)
                     }
-                    .help("Quit Murmur")
+                    .help("Quit Nochi")
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 6)

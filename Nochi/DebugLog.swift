@@ -1,7 +1,7 @@
 import Foundation
 
 enum DebugLog {
-    private static let logPath = "/tmp/Murmur-debug.log"
+    private static let logPath = "/tmp/Nochi-debug.log"
 
     private static let formatter: DateFormatter = {
         let f = DateFormatter()
