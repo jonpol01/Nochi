@@ -126,8 +126,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     }
 
     private func setupStatusBar() {
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Nochi")
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        if let icon = NSImage(named: "AppIcon") {
+            let size = NSSize(width: 18, height: 18)
+            let resized = NSImage(size: size)
+            resized.lockFocus()
+            let path = NSBezierPath(roundedRect: NSRect(origin: .zero, size: size), xRadius: 4, yRadius: 4)
+            path.addClip()
+            icon.draw(in: NSRect(origin: .zero, size: size))
+            resized.unlockFocus()
+            resized.isTemplate = false
+            item.button?.image = resized
+        }
         item.button?.toolTip = "Nochi"
 
         let menu = NSMenu()
