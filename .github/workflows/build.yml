@@ -67,5 +67,5 @@ jobs:
           gh release create "${{ steps.version.outputs.tag }}" \
             "Nochi-${{ steps.version.outputs.tag }}.zip" \
             --title "Nochi ${{ steps.version.outputs.tag }}" \
-            --notes "Unsigned build — right-click → Open to bypass Gatekeeper on first launch." \
+            --generate-notes \
             --latest
