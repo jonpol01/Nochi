@@ -1,0 +1,47 @@
+<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ember" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="50%" stop-color="#fb7185"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <linearGradient id="iconBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1c1c1f"/>
+      <stop offset="100%" stop-color="#000"/>
+    </linearGradient>
+  </defs>
+
+  <!-- macOS rounded rect background -->
+  <rect width="1024" height="1024" rx="232" fill="url(#iconBg)"/>
+
+  <!-- Notch silhouette -->
+  <path d="M 54,296
+           Q 54,259 88,259
+           L 936,259
+           Q 970,259 970,296
+           L 970,458
+           Q 970,505 921,505
+           Q 847,505 821,566
+           Q 773,674 692,674
+           L 332,674
+           Q 251,674 203,566
+           Q 177,505 103,505
+           Q 54,505 54,458 Z"
+        fill="#000"/>
+
+  <!-- Audio bars with ember gradient -->
+  <g fill="url(#ember)">
+    <rect x="216" y="432" width="27" height="86" rx="13.5"/>
+    <rect x="270" y="399" width="27" height="119" rx="13.5"/>
+    <rect x="324" y="356" width="27" height="162" rx="13.5"/>
+    <rect x="378" y="302" width="27" height="216" rx="13.5"/>
+    <rect x="432" y="324" width="27" height="194" rx="13.5"/>
+    <rect x="486" y="292" width="27" height="226" rx="13.5"/>
+    <rect x="540" y="318" width="27" height="200" rx="13.5"/>
+    <rect x="594" y="345" width="27" height="173" rx="13.5"/>
+    <rect x="648" y="378" width="27" height="140" rx="13.5"/>
+    <rect x="702" y="410" width="27" height="108" rx="13.5"/>
+    <rect x="756" y="432" width="27" height="86" rx="13.5"/>
+    <rect x="810" y="448" width="27" height="70" rx="13.5"/>
+  </g>
+</svg>

@@ -2,7 +2,7 @@
 
 **[English](README.md)** | **[日本語](README.ja.md)**
 
-<img src="assets/app-icon.png" width="128" alt="Nochi アプリアイコン" />
+<img src="assets/app-icon.svg" width="128" alt="Nochi アプリアイコン" />
 
 # Nochi (ノッチ)
 
