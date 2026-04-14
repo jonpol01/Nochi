@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Combine
 import CoreGraphics
@@ -375,6 +376,27 @@ final class TranslatorModel: ObservableObject {
 
     func adjustFontSize(delta: Double) {
         fontSize = max(12, min(40, fontSize + delta))
+    }
+
+    // MARK: - Display Selection
+
+    struct ScreenInfo: Identifiable {
+        let id: CGDirectDisplayID
+        let name: String
+        let isCurrent: Bool
+    }
+
+    var availableScreens: [ScreenInfo] {
+        NSScreen.screens.compactMap { screen in
+            guard let n = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { return nil }
+            let id = CGDirectDisplayID(n.uint32Value)
+            return ScreenInfo(id: id, name: screen.localizedName, isCurrent: id == selectedScreenID)
+        }
+    }
+
+    func selectScreen(_ id: CGDirectDisplayID) {
+        selectedScreenID = id
+        saveToDefaults()
     }
 
     // MARK: - Persistence

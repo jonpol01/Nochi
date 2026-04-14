@@ -199,8 +199,20 @@ struct OverlayView: View {
 
                 Spacer(minLength: 8)
 
-                // Right: display mode, font, close
+                // Right: display picker, display mode, font, close
                 HStack(spacing: 6) {
+                    OverlayControlButton(symbol: "display") {
+                        let screens = model.availableScreens
+                        guard screens.count > 1 else { return }
+                        if let idx = screens.firstIndex(where: { $0.isCurrent }) {
+                            let next = screens[(idx + 1) % screens.count]
+                            model.selectScreen(next.id)
+                        } else {
+                            if let first = screens.first { model.selectScreen(first.id) }
+                        }
+                    }
+                    .help("Move to next display")
+
                     OverlayControlButton(
                         symbol: model.displayMode == .both ? "text.justify.left" : "captions.bubble"
                     ) {
