@@ -72,6 +72,8 @@ private struct AppleNotchShape: InsettableShape {
 
 struct OverlayView: View {
     @ObservedObject var model: TranslatorModel
+    @State private var showControls = true
+    @State private var controlsTimer: Task<Void, Never>?
 
     private let languageOptions: [(code: String, flag: String, name: String)] = [
         ("ja", "\u{1F1EF}\u{1F1F5}", "JA"),
@@ -246,6 +248,8 @@ struct OverlayView: View {
             .padding(.horizontal, 10)
             .padding(.top, 8)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .opacity(showControls ? 1 : 0)
+            .animation(.easeInOut(duration: 0.3), value: showControls)
             .transaction { $0.animation = nil }
 
             // Error banner
@@ -263,6 +267,22 @@ struct OverlayView: View {
             }
         }
         .frame(width: model.overlayWidth, height: model.overlayHeight)
+        .onHover { hovering in
+            if hovering {
+                showControls = true
+                resetControlsTimer()
+            }
+        }
+        .onAppear { resetControlsTimer() }
+    }
+
+    private func resetControlsTimer() {
+        controlsTimer?.cancel()
+        controlsTimer = Task {
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            guard !Task.isCancelled else { return }
+            showControls = false
+        }
     }
 
     /// Older lines fade out, newest line is fully visible.
