@@ -193,14 +193,6 @@ For higher accuracy speech recognition via local Whisper models:
 
 ---
 
-## Related Repositories
-
-| Repo | Description |
-|------|-------------|
-| [notchprompt](https://github.com/jonpol01/notchprompt) | Teleprompter in the notch — the UI architecture Nochi is built on |
-
----
-
 ## License
 
 MIT

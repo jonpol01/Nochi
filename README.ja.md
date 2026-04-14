@@ -193,14 +193,6 @@ CocoaPodsなし、SPM依存なし。純粋なAppleフレームワークのみ。
 
 ---
 
-## 関連リポジトリ
-
-| リポジトリ | 説明 |
-|-----------|------|
-| [notchprompt](https://github.com/jonpol01/notchprompt) | ノッチ内テレプロンプター — NochiのUIアーキテクチャの元 |
-
----
-
 ## ライセンス
 
 MIT
