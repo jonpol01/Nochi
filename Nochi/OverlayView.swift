@@ -115,7 +115,7 @@ struct OverlayView: View {
                 // Zone 1: Completed lines — scroll upward, fill available space
                 VStack(spacing: 2) {
                     if !model.isListening && model.subtitleLines.isEmpty && model.translatedText.isEmpty {
-                        Text(isSubtitleMode ? "Ready for subtitles" : "Ready to translate")
+                        Text(isSubtitleMode ? String(localized: "overlay.readySubtitles") : String(localized: "overlay.readyTranslate"))
                             .font(.system(size: CGFloat(model.fontSize * 0.85), weight: .regular))
                             .foregroundStyle(.white.opacity(0.3))
                     } else if model.isListening && model.subtitleLines.isEmpty && model.originalText.isEmpty {
@@ -164,7 +164,7 @@ struct OverlayView: View {
                     ) {
                         model.toggleListening()
                     }
-                    .help(model.isListening ? "Stop listening" : "Start listening")
+                    .help(model.isListening ? String(localized: "overlay.stopListening") : String(localized: "overlay.startListening"))
 
                     if model.isListening {
                         Circle()
@@ -211,29 +211,29 @@ struct OverlayView: View {
                             if let first = screens.first { model.selectScreen(first.id) }
                         }
                     }
-                    .help("Move to next display")
+                    .help(String(localized: "overlay.moveToDisplay"))
 
                     OverlayControlButton(
                         symbol: model.displayMode == .both ? "text.justify.left" : "captions.bubble"
                     ) {
                         model.displayMode = model.displayMode == .both ? .translationOnly : .both
                     }
-                    .help(model.displayMode == .both ? "Translation only" : "Show original + translation")
+                    .help(model.displayMode == .both ? String(localized: "overlay.translationOnly") : String(localized: "overlay.showOriginal"))
 
                     OverlayControlButton(symbol: "minus", repeatWhilePressed: true) {
                         model.adjustFontSize(delta: -1)
                     }
-                    .help("Decrease font size")
+                    .help(String(localized: "overlay.decreaseFont"))
 
                     OverlayControlButton(symbol: "plus", repeatWhilePressed: true) {
                         model.adjustFontSize(delta: 1)
                     }
-                    .help("Increase font size")
+                    .help(String(localized: "overlay.increaseFont"))
 
                     OverlayControlButton(symbol: "xmark") {
                         NSApp.terminate(nil)
                     }
-                    .help("Quit Nochi")
+                    .help(String(localized: "overlay.quit"))
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 6)
@@ -308,7 +308,7 @@ struct OverlayView: View {
             ProgressView()
                 .scaleEffect(0.5)
                 .frame(width: 12, height: 12)
-            Text("Listening\u{2026}")
+            Text(String(localized: "overlay.listening"))
                 .font(.system(size: CGFloat(model.fontSize * 0.75), weight: .regular))
                 .foregroundStyle(.white.opacity(0.4))
         }
