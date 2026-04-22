@@ -83,6 +83,38 @@ Watch a YouTube video in Japanese, join a meeting in Spanish, or listen to a pod
 
 ---
 
+## First-Run Onboarding
+
+Nochi detects when on-device speech or translation models aren't installed for the selected language pair and guides users to download them — so they're never stuck wondering why transcription/translation isn't working.
+
+### 1. Orange badge on the mic button
+
+A subtle dot appears on the mic icon when the current source → target pair needs setup.
+
+<div align="center">
+<img src="assets/screenshots/overlay-warning.png" width="100%" alt="Overlay with orange warning badge on mic button" />
+</div>
+
+### 2. Setup Required dialog
+
+Clicking the mic button pops up a friendly dialog instead of silently failing. The user can jump straight to System Settings or start anyway (server-based).
+
+<div align="center">
+<img src="assets/screenshots/setup-alert.png" width="360" alt="Setup Required dialog" />
+</div>
+
+### 3. Deep-linked System Settings
+
+The app opens the exact System Settings pane where the language pack can be downloaded.
+
+<div align="center">
+<img src="assets/screenshots/language-region.png" width="520" alt="System Settings > Language & Region" />
+</div>
+
+Common pairs (JA↔EN, EN↔ES, EN↔ZH…) are pre-installed by macOS and never trigger the flow. It only appears for pairs that actually need a download — like `JA → TH` above.
+
+---
+
 ## Architecture
 
 <div align="center">

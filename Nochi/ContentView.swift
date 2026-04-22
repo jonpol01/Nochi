@@ -37,6 +37,10 @@ struct ContentView: View {
                     .font(.title2.bold())
                     .padding(.bottom, 4)
 
+                if model.needsModelSetup {
+                    setupSection
+                }
+
                 languagesSection
                 speechEngineSection
                 displaySection
@@ -50,7 +54,82 @@ struct ContentView: View {
         .frame(minWidth: 500, idealWidth: 600, maxWidth: 700, minHeight: 500)
         .onAppear {
             checkPermissions()
+            model.refreshModelAvailability()
         }
+    }
+
+    // MARK: - Setup (first-run / missing models)
+
+    private func languageName(_ code: String) -> String {
+        if code == "auto" { return String(localized: "settings.autoBuiltIn") }
+        return supportedLanguages.first { $0.code == code }?.name ?? code
+    }
+
+    @ViewBuilder
+    private var setupSection: some View {
+        GroupBox {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                    Text(String(localized: "setup.title"))
+                        .font(.headline)
+                }
+
+                // Speech model warning
+                if model.speechModelStatus != .available {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(model.speechModelStatus == .unsupported
+                             ? String(localized: "setup.unsupportedLanguage")
+                             : String(localized: "setup.speechMissing"))
+                            .font(.system(size: 13, weight: .semibold))
+
+                        if model.speechModelStatus == .serverOnly {
+                            Text(String(localized: "setup.serverMode"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else if model.speechModelStatus == .unsupported {
+                            EmptyView()
+                        } else {
+                            Text(String(format: String(localized: "setup.speechMissingHelp"),
+                                       languageName(model.sourceLanguageCode)))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        if model.speechModelStatus != .unsupported {
+                            Button(String(localized: "setup.openDictation")) {
+                                SettingsDeepLink.openDictation()
+                            }
+                            .controlSize(.small)
+                        }
+                    }
+                }
+
+                // Translation model warning
+                if model.translationModelStatus == .supported || model.translationModelStatus == .unsupported {
+                    Divider()
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(String(localized: "setup.translationMissing"))
+                            .font(.system(size: 13, weight: .semibold))
+
+                        Text(String(format: String(localized: "setup.translationMissingHelp"),
+                                   languageName(model.sourceLanguageCode),
+                                   languageName(model.targetLanguageCode)))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Button(String(localized: "setup.openLanguageRegion")) {
+                            SettingsDeepLink.openLanguageRegion()
+                        }
+                        .controlSize(.small)
+                    }
+                }
+            }
+            .padding(4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .background(Color.orange.opacity(0.06))
     }
 
     // MARK: - Languages
