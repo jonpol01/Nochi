@@ -160,13 +160,24 @@ struct OverlayView: View {
             HStack {
                 // Left: listening indicator + toggle + language picker
                 HStack(spacing: 6) {
-                    OverlayControlButton(
-                        symbol: model.isListening ? "stop.fill" : "mic.fill",
-                        isActive: model.isListening
-                    ) {
-                        model.toggleListening()
+                    ZStack(alignment: .topTrailing) {
+                        OverlayControlButton(
+                            symbol: model.isListening ? "stop.fill" : "mic.fill",
+                            isActive: model.isListening
+                        ) {
+                            model.toggleListening()
+                        }
+                        .help(model.isListening ? String(localized: "overlay.stopListening") : String(localized: "overlay.startListening"))
+
+                        // Setup-required warning badge
+                        if model.needsModelSetup {
+                            Circle()
+                                .fill(Color.orange)
+                                .frame(width: 7, height: 7)
+                                .overlay(Circle().stroke(Color.black, lineWidth: 1))
+                                .offset(x: 2, y: -2)
+                        }
                     }
-                    .help(model.isListening ? String(localized: "overlay.stopListening") : String(localized: "overlay.startListening"))
 
                     if model.isListening {
                         Circle()

@@ -103,6 +103,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             self?.model.saveToDefaults()
         }
         .store(in: &cancellables)
+
+        // Refresh model availability when languages change
+        Publishers.CombineLatest(model.$sourceLanguageCode, model.$targetLanguageCode)
+            .removeDuplicates { $0.0 == $1.0 && $0.1 == $1.1 }
+            .debounce(for: .milliseconds(200), scheduler: RunLoop.main)
+            .sink { [weak self] _, _ in
+                self?.model.refreshModelAvailability()
+            }
+            .store(in: &cancellables)
+
+        // Show setup alert whenever user tries to start listening without models
+        model.modelSetupRequired
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in
+                self?.showModelSetupAlert()
+            }
+            .store(in: &cancellables)
+
+        // Initial check
+        model.refreshModelAvailability()
     }
 
     private func setupEditMenu() {
@@ -231,6 +251,57 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 
     @objc private func toggleListeningAction() {
         model.toggleListening()
+    }
+
+    /// Present a setup alert when required models aren't installed.
+    private func showModelSetupAlert() {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = String(localized: "setup.title")
+
+        var parts: [String] = []
+        if model.speechModelStatus == .serverOnly {
+            parts.append(String(localized: "setup.serverMode"))
+        } else if model.speechModelStatus == .unsupported {
+            parts.append(String(localized: "setup.unsupportedLanguage"))
+        }
+        if model.translationModelStatus == .supported || model.translationModelStatus == .unsupported {
+            parts.append(String(format: String(localized: "setup.translationMissingHelp"),
+                                languageName(model.sourceLanguageCode),
+                                languageName(model.targetLanguageCode)))
+        }
+        alert.informativeText = parts.joined(separator: "\n\n")
+
+        alert.addButton(withTitle: String(localized: "setup.openLanguageRegion"))
+        if model.speechModelStatus != .available {
+            alert.addButton(withTitle: String(localized: "setup.openDictation"))
+        }
+        alert.addButton(withTitle: String(localized: "alert.startAnyway"))
+        alert.addButton(withTitle: String(localized: "alert.cancel"))
+
+        NSApp.activate(ignoringOtherApps: true)
+        let response = alert.runModal()
+        let openLangRegion = NSApplication.ModalResponse.alertFirstButtonReturn
+        let openDictation: NSApplication.ModalResponse = model.speechModelStatus != .available
+            ? .alertSecondButtonReturn : .alertThirdButtonReturn  // unused when no dictation btn
+        let startAnywayResponse: NSApplication.ModalResponse = model.speechModelStatus != .available
+            ? .alertThirdButtonReturn : .alertSecondButtonReturn
+
+        switch response {
+        case openLangRegion:
+            SettingsDeepLink.openLanguageRegion()
+        case openDictation where model.speechModelStatus != .available:
+            SettingsDeepLink.openDictation()
+        case startAnywayResponse:
+            model.startListeningForced()
+        default:
+            break
+        }
+    }
+
+    private func languageName(_ code: String) -> String {
+        let locale = Locale.current
+        return locale.localizedString(forLanguageCode: code) ?? code
     }
 
     @objc private func toggleOverlayVisibility() {

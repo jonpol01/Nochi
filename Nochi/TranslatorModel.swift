@@ -43,6 +43,14 @@ final class TranslatorModel: ObservableObject {
     @Published var isPipelineReady: Bool = false
     @Published var pipelineError: String?
 
+    // Model availability
+    @Published var speechModelStatus: ModelAvailability.SpeechStatus = .available
+    @Published var translationModelStatus: ModelAvailability.TranslationStatus = .unknown
+
+    /// Fires when toggleListening is called but models aren't set up.
+    /// AppDelegate listens and shows an alert.
+    let modelSetupRequired = PassthroughSubject<Void, Never>()
+
     // Transcript display
     @Published var originalText: String = ""
     @Published var translatedText: String = ""
@@ -98,6 +106,29 @@ final class TranslatorModel: ObservableObject {
     private init() {}
 
     // MARK: - Pipeline Control
+
+    /// Check availability of speech + translation models for the
+    /// currently selected language pair. Call after any change.
+    func refreshModelAvailability() {
+        speechModelStatus = ModelAvailability.speechStatus(for: sourceLanguageCode)
+        DebugLog.log("Model", "Speech status for \(sourceLanguageCode): \(speechModelStatus)")
+        let source = sourceLanguageCode
+        let target = targetLanguageCode
+        Task {
+            let status = await ModelAvailability.translationStatus(from: source, to: target)
+            await MainActor.run {
+                self.translationModelStatus = status
+                DebugLog.log("Model", "Translation status \(source)->\(target): \(status)")
+                DebugLog.log("Model", "needsModelSetup: \(self.needsModelSetup)")
+            }
+        }
+    }
+
+    /// True when either the speech model or translation model isn't
+    /// fully installed on-device — user should download them.
+    var needsModelSetup: Bool {
+        speechModelStatus != .available || translationModelStatus == .supported || translationModelStatus == .unsupported
+    }
 
     func startListening() {
         guard !isListening else { return }
@@ -189,8 +220,18 @@ final class TranslatorModel: ObservableObject {
         if isListening {
             stopListening()
         } else {
+            if needsModelSetup {
+                modelSetupRequired.send()
+                return
+            }
             startListening()
         }
+    }
+
+    /// Force-start even if models aren't ready (user picked "Start Anyway").
+    func startListeningForced() {
+        if isListening { return }
+        startListening()
     }
 
     // MARK: - Transcript Handling

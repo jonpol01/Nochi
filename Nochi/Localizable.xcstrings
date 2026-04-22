@@ -324,6 +324,72 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Decrease Font Size" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "フォントサイズ縮小" } }
       }
+    },
+    "setup.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Setup Required" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "セットアップが必要" } }
+      }
+    },
+    "setup.speechMissing" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "On-device speech model not installed" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "オンデバイス音声モデル未インストール" } }
+      }
+    },
+    "setup.speechMissingHelp" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nochi needs the %@ speech model for fully private, offline transcription. Download it in System Settings." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "完全プライベートなオフライン転写のため、%@音声モデルが必要です。システム設定でダウンロードしてください。" } }
+      }
+    },
+    "setup.translationMissing" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Translation language not installed" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "翻訳言語が未インストール" } }
+      }
+    },
+    "setup.translationMissingHelp" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Download the %@ → %@ translation pair in Language & Region to translate offline." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "オフライン翻訳には「%@ → %@」の言語ペアを言語と地域からダウンロードしてください。" } }
+      }
+    },
+    "setup.openDictation" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Keyboard Settings" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キーボード設定を開く" } }
+      }
+    },
+    "setup.openLanguageRegion" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Language & Region" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "言語と地域を開く" } }
+      }
+    },
+    "setup.unsupportedLanguage" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This language isn't supported by Apple Speech" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "この言語はApple Speechでサポートされていません" } }
+      }
+    },
+    "setup.serverMode" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Speech will use Apple's servers (requires internet). Download the on-device model for offline use." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "音声認識はAppleのサーバーを使用します（インターネット必須）。オフライン利用にはオンデバイスモデルをダウンロードしてください。" } }
+      }
+    },
+    "alert.startAnyway" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Start Anyway" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "それでも開始" } }
+      }
+    },
+    "alert.cancel" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャンセル" } }
+      }
     }
   },
   "version" : "1.0"
